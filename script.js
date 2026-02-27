@@ -136,14 +136,21 @@ function init(){
 // ==========================================================
 // --- NAVEGAÇÃO E TEMAS ---
 // ==========================================================
-function setTheme(themeName){ Auth.setTheme(themeName); }
 function switchView(viewName){
     document.querySelectorAll('.view-section').forEach(el=>el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+
+    // Fecha sidebar no mobile após navegar
+    if (window.innerWidth <= 900) {
+        document.querySelector('.sidebar')?.classList.remove('active');
+    }
+
     const targetView=document.getElementById('view-'+viewName);
     if(targetView) targetView.classList.add('active');
+
     const btnMap={home:'btn-home',semestres:'btn-semestres',focus:'btn-semestres',calendario:'btn-calendario'};
-    const btnId=btnMap[viewName]; if(btnId) document.getElementById(btnId).classList.add('active');
+    const btnId=btnMap[viewName];
+    if(btnId) document.getElementById(btnId).classList.add('active');
 }
 
 // ==========================================================
@@ -550,21 +557,27 @@ window.addEventListener("load", () => {
         profileImage.src = savedImage;
     }
 });
+// ==========================================================
+// --- TEMA NO MOBILE (USA O SISTEMA PRINCIPAL) ---
+// ==========================================================
 const mobileThemeBtn = document.getElementById("mobileThemeBtn");
 
-const themes = ["theme-default", "theme-dark", "theme-light"];
-let currentThemeIndex = 0;
-
-// pega tema salvo
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme) {
-  document.body.className = savedTheme;
-  currentThemeIndex = themes.indexOf(savedTheme);
-}
+const themeOrder = ["default", "dark", "white", "ucp"];
 
 mobileThemeBtn?.addEventListener("click", () => {
-  currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-  const newTheme = themes[currentThemeIndex];
-  document.body.className = newTheme;
-  localStorage.setItem("theme", newTheme);
+    const current = localStorage.getItem(Auth.THEME_KEY) || "default";
+    let index = themeOrder.indexOf(current);
+    index = (index + 1) % themeOrder.length;
+    const nextTheme = themeOrder[index];
+
+    Auth.setTheme(nextTheme);
 });
+// ==========================================================
+// --- SIDEBAR MOBILE ---
+// ==========================================================
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar?.classList.toggle('active');
+}
+
+    
