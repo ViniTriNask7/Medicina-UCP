@@ -136,21 +136,14 @@ function init(){
 // ==========================================================
 // --- NAVEGAÇÃO E TEMAS ---
 // ==========================================================
+function setTheme(themeName){ Auth.setTheme(themeName); }
 function switchView(viewName){
     document.querySelectorAll('.view-section').forEach(el=>el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-
-    // Fecha sidebar no mobile após navegar
-    if (window.innerWidth <= 900) {
-        document.querySelector('.sidebar')?.classList.remove('active');
-    }
-
     const targetView=document.getElementById('view-'+viewName);
     if(targetView) targetView.classList.add('active');
-
     const btnMap={home:'btn-home',semestres:'btn-semestres',focus:'btn-semestres',calendario:'btn-calendario'};
-    const btnId=btnMap[viewName];
-    if(btnId) document.getElementById(btnId).classList.add('active');
+    const btnId=btnMap[viewName]; if(btnId) document.getElementById(btnId).classList.add('active');
 }
 
 // ==========================================================
@@ -557,20 +550,12 @@ window.addEventListener("load", () => {
         profileImage.src = savedImage;
     }
 });
-// ==========================================================
-// --- TEMA NO MOBILE (USA O SISTEMA PRINCIPAL) ---
-// ==========================================================
-const mobileThemeBtn = document.getElementById("mobileThemeBtn");
-
-const themeOrder = ["default", "dark", "white", "ucp"];
-
-mobileThemeBtn?.addEventListener("click", () => {
-    const current = localStorage.getItem(Auth.THEME_KEY) || "default";
-    let index = themeOrder.indexOf(current);
-    index = (index + 1) % themeOrder.length;
-    const nextTheme = themeOrder[index];
-
-    Auth.setTheme(nextTheme);
+// Carregar imagem salva ao abrir página
+window.addEventListener("load", () => {
+    const savedImage = localStorage.getItem("profileImage");
+    if (savedImage) {
+        profileImage.src = savedImage;
+    }
 });
 // ==========================================================
 // --- SIDEBAR MOBILE ---
@@ -586,5 +571,20 @@ function toggleSidebar() {
         overlay.classList.toggle('active');
     }
 }
-
+// isso faz a ponte entre o HTML e o sistema de temas
+window.setTheme = function(themeName) {
+    Auth.setTheme(themeName);
+};
+    function setThemePreview(themeName) {
+        // Remove todas as classes de tema existentes
+        document.body.classList.remove('theme-default', 'theme-white', 'theme-dark', 'theme-ucp');
+        
+        // Adiciona a nova classe de tema (se não for 'default')
+        if (themeName !== 'default') {
+            document.body.classList.add('theme-' + themeName);
+        }
+        
+        // Salva a escolha
+        localStorage.setItem(THEME_KEY, themeName);
+    }
     
