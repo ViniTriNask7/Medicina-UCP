@@ -110,22 +110,25 @@
             </button>
         </section>
 
-        <section id="view-calendario" class="view-section">
-                        <!-- Botão Voltar Celular -->
+            <section id="view-calendario" class="view-section">
+            
+            <!-- Botão Voltar (Celular) -->
             <button class="mobile-back-btn" onclick="switchView('home')">
                 <i class="fa-solid fa-arrow-left"></i> Voltar
             </button>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h2>📅 Agenda Acadêmica</h2>
-                <button class="btn-primary-big" style="width: auto; padding: 10px 20px; margin: 0; font-size: 0.9rem;" onclick="document.getElementById('form-agenda-box').style.display='block'">
-                    <i class="fa-solid fa-plus"></i> Novo Compromisso
+            <!-- Cabeçalho Arrumado -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%;">
+                <h2 style="margin: 0;">📅 Agenda</h2>
+                
+                <button onclick="document.getElementById('form-agenda-box').style.display='block'" 
+                        style="background: var(--primary); border: none; color: white; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-plus"></i> <span style="font-size: 0.9rem;">Novo</span>
                 </button>
             </div>
 
             <div id="form-agenda-box" style="display:none; background: var(--bg-card); padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: var(--shadow);">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Adicionar à Agenda</h3>
+                <!-- ... resto do formulário ... -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div>
                         <label style="display:block; font-size: 0.8rem; margin-bottom: 5px;">Matéria</label>
