@@ -577,7 +577,14 @@ mobileThemeBtn?.addEventListener("click", () => {
 // ==========================================================
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
     sidebar?.classList.toggle('active');
+    
+    // O overlay fecha junto
+    if (overlay) {
+        overlay.classList.toggle('active');
+    }
 }
 
     
