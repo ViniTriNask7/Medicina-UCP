@@ -1003,3 +1003,120 @@ body.login-page::before {
     z-index: 1000;
   }
 }
+/* --- CORREÇÕES MOBILE & UX --- */
+
+/* 1. Botão do Menu Mobile (Faltava no seu CSS) */
+.mobile-menu-btn {
+    display: none; /* Esconde no PC */
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: 0.2s;
+    z-index: 1001; /* Acima de tudo */
+}
+
+.mobile-menu-btn:active {
+    background: var(--primary);
+    color: white;
+}
+
+/* 2. Overlay da Sidebar (Fecha o menu ao clicar fora) */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 90; /* Abaixo da sidebar (100), acima do conteúdo */
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s ease;
+    pointer-events: none;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* 3. Estilos Globais para Mobile */
+@media (max-width: 900px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    /* Posição do botão de tema no mobile */
+    .mobile-theme-btn {
+        display: block;
+        position: relative; /* Muda de absolute para relative para não sobrepor */
+        margin-left: 10px;
+    }
+
+    /* Corrige a área de estudo (Focus Mode) no celular */
+    .focus-workspace {
+        display: flex !important; /* Força flexbox */
+        flex-direction: column;
+        height: auto !important; /* Altura automática */
+        min-height: 100dvh; /* Usa a altura real do dispositivo móvel */
+        gap: 15px;
+    }
+
+    .focus-sidebar {
+        height: auto;
+        max-height: 300px; /* Limita a altura da lista de matérias */
+        overflow-y: auto;
+        border-radius: 16px;
+    }
+
+    .focus-main {
+        height: auto;
+        min-height: 500px; /* Garante que a área de notas tenha espaço */
+        border-radius: 16px;
+    }
+    
+    /* 4. Corrige Zoom no iOS (Inputs) */
+    input, textarea, select, .login-input {
+        font-size: 16px !important; /* Impede zoom automático */
+    }
+    
+    /* Ajusta a sidebar para cobrir a tela toda no mobile */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        z-index: 100;
+        transition: 0.3s ease;
+        width: 280px;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    /* Ajusta o main para não ter margem lateral no mobile */
+    main {
+        padding: 20px !important;
+        margin-left: 0 !important;
+    }
+}
+
+/* Ajuste extra para telas muito pequenas (iPhone SE / antigos) */
+@media (max-width: 400px) {
+    .header-dash {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .timer-mini, .btn-primary-big {
+        width: 100%;
+        justify-content: center;
+    }
+}
