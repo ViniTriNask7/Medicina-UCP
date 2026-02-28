@@ -138,6 +138,10 @@ function init(){
 // ==========================================================
 function setTheme(themeName){ Auth.setTheme(themeName); }
 function switchView(viewName){
+     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar?.classList.remove('active');
+    overlay?.classList.remove('active');
     document.querySelectorAll('.view-section').forEach(el=>el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
     const targetView=document.getElementById('view-'+viewName);
