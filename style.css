@@ -1,6 +1,9 @@
 /* --- CONFIGURAÇÃO DE TEMAS --- */
 
-:root, body.theme-default {
+/* --- CONFIGURAÇÃO DE TEMAS --- */
+
+:root,
+body.theme-default {
     --bg-body: #0f172a;
     --bg-sidebar: #1e293b;
     --bg-card: #1e293b;
@@ -13,9 +16,8 @@
     --border: rgba(148, 163, 184, 0.1);
     --success: #4ade80;
     --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-    --input-bg: #0f172a;.theme-default {
+    --input-bg: #0f172a;
     --overlay-color: rgba(15, 23, 42, 0.85);
-}
 }
 
 body.theme-white {
@@ -32,9 +34,7 @@ body.theme-white {
     --success: #16a34a;
     --shadow: 0 4px 12px rgba(0,0,0,0.05);
     --input-bg: #ffffff;
-    .theme-dark {
-    --overlay-color: rgba(0, 0, 0, 0.85);
-}
+    --overlay-color: rgba(255, 255, 255, 0.75);
 }
 
 body.theme-dark {
@@ -50,10 +50,7 @@ body.theme-dark {
     --border: rgba(255, 255, 255, 0.1);
     --success: #10b981;
     --input-bg: #000000;
-    .theme-white {
-    --overlay-color: rgba(255, 255, 255, 0.75);
-}
-
+    --overlay-color: rgba(0, 0, 0, 0.85);
 }
 
 body.theme-ucp {
@@ -61,17 +58,15 @@ body.theme-ucp {
     --bg-sidebar: #111827;
     --bg-card: #1e293b;
     --bg-glass: rgba(30, 41, 59, 0.8);
-    --primary: #2563eb; /* Azul */
-    --secondary: #dc2626; /* Vermelho */
-    --accent: #ffffff; /* Branco */
+    --primary: #2563eb;
+    --secondary: #dc2626;
+    --accent: #ffffff;
     --text-main: #ffffff;
     --text-muted: #cbd5e1;
     --border: rgba(255, 255, 255, 0.1);
     --success: #4ade80;
     --input-bg: #0a0e17;
-    .theme-ucp {
     --overlay-color: rgba(0, 51, 102, 0.85);
-}
 }
 
 /* --- RESET E BASE --- */
@@ -410,8 +405,6 @@ input[type="date"], input[type="number"] {
 
 /* --- RESPONSIVIDADE --- */
 @media (max-width: 900px) {
-    .sidebar { width: 80px; padding: 15px; }
-    .nav-btn span, .brand, .profile-info { display: none; }
     .focus-workspace { grid-template-columns: 1fr; }
     #calendario-grid { grid-template-columns: 1fr; }
     
