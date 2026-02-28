@@ -1005,9 +1005,9 @@ body.login-page::before {
 }
 /* --- CORREÇÕES MOBILE & UX --- */
 
-/* 1. Botão do Menu Mobile (Faltava no seu CSS) */
+/* 1. Botão do Menu Mobile */
 .mobile-menu-btn {
-    display: none; /* Esconde no PC */
+    display: none;
     background: var(--bg-card);
     color: var(--text-main);
     border: 1px solid var(--border);
@@ -1019,7 +1019,7 @@ body.login-page::before {
     justify-content: center;
     font-size: 1.2rem;
     transition: 0.2s;
-    z-index: 1001; /* Acima de tudo */
+    z-index: 1001;
 }
 
 .mobile-menu-btn:active {
@@ -1027,72 +1027,71 @@ body.login-page::before {
     color: white;
 }
 
-/* 2. Overlay da Sidebar (Fecha o menu ao clicar fora) */
+/* 2. Overlay da Sidebar - CORRIGIDO */
 .sidebar-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    z-index: 90; /* Abaixo da sidebar (100), acima do conteúdo */
+    z-index: 95; /* Abaixo do Header (100), acima do resto */
     opacity: 0;
     visibility: hidden;
     transition: 0.3s ease;
-    pointer-events: none;
+    pointer-events: none; /* Permite clicar através quando invisível */
 }
 
 .sidebar-overlay.active {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;
+    pointer-events: auto; /* Bloqueia clique no fundo quando aberto */
 }
 
-/* 3. Estilos Globais para Mobile */
+/* 3. Estilos Mobile */
 @media (max-width: 900px) {
     .mobile-menu-btn {
         display: flex;
     }
 
-    /* Posição do botão de tema no mobile */
-    .mobile-theme-btn {
-        display: block;
-        position: relative; /* Muda de absolute para relative para não sobrepor */
-        margin-left: 10px;
+    /* Garante que o Header fique sempre acima do Overlay */
+    .header-dash {
+        position: relative;
+        z-index: 100; 
     }
 
-    /* Corrige a área de estudo (Focus Mode) no celular */
+    /* Área de Estudo (Focus Mode) */
     .focus-workspace {
-        display: flex !important; /* Força flexbox */
+        display: flex !important;
         flex-direction: column;
-        height: auto !important; /* Altura automática */
-        min-height: 100dvh; /* Usa a altura real do dispositivo móvel */
+        height: auto !important;
+        min-height: 100dvh;
         gap: 15px;
     }
 
     .focus-sidebar {
         height: auto;
-        max-height: 300px; /* Limita a altura da lista de matérias */
+        max-height: 250px;
         overflow-y: auto;
         border-radius: 16px;
     }
 
     .focus-main {
         height: auto;
-        min-height: 500px; /* Garante que a área de notas tenha espaço */
+        min-height: 500px;
         border-radius: 16px;
     }
     
-    /* 4. Corrige Zoom no iOS (Inputs) */
+    /* Corrige Zoom no iOS */
     input, textarea, select, .login-input {
-        font-size: 16px !important; /* Impede zoom automático */
+        font-size: 16px !important;
     }
     
-    /* Ajusta a sidebar para cobrir a tela toda no mobile */
+    /* Sidebar Mobile */
     .sidebar {
         position: fixed;
         left: -100%;
         top: 0;
         height: 100%;
-        z-index: 100;
+        z-index: 99; /* Abaixo do Header (100) */
         transition: 0.3s ease;
         width: 280px;
     }
@@ -1101,20 +1100,22 @@ body.login-page::before {
         left: 0;
     }
     
-    /* Ajusta o main para não ter margem lateral no mobile */
     main {
         padding: 20px !important;
         margin-left: 0 !important;
     }
+    
+    /* Esconde o botão de tema flutuante */
+    .mobile-theme-btn {
+        display: none !important;
+    }
 }
 
-/* Ajuste extra para telas muito pequenas (iPhone SE / antigos) */
 @media (max-width: 400px) {
     .header-dash {
         flex-direction: column;
         align-items: flex-start;
     }
-    
     .timer-mini, .btn-primary-big {
         width: 100%;
         justify-content: center;
