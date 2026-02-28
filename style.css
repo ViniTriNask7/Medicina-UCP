@@ -885,7 +885,7 @@ body::before {
 /* ===== LOGIN BACKGROUND PROFISSIONAL ===== */
 
 body.login-page {
-    background: url("../images/ucp.jpg") no-repeat center center fixed !important;
+    background: url("images/ucp.jpg") no-repeat center center fixed !important;
     background-size: cover !important;
     position: relative;
 }
