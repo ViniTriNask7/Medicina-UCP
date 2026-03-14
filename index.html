@@ -2,26 +2,27 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Medicina PY | Entrar</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=2">
+    <meta name="theme-color" content="#38bdf8">
 </head>
 
 <body class="theme-default login-page">
-
     <div class="login-container">
         <div class="login-box">
             <div class="login-logo">⚕️</div>
+            
             <h1 class="login-title">Medicina PY</h1>
             <p class="login-subtitle">Digite seu nome e senha para continuar</p>
 
             <form id="login-form" onsubmit="handleLogin(event)">
-                
                 <div class="login-input-group">
-                    <label for="user-name">Seu Nome</label>
+                    <label for="user-name">
+                        <i class="fa-regular fa-user"></i> Seu Nome
+                    </label>
                     <input 
                         type="text" 
                         id="user-name" 
@@ -29,29 +30,32 @@
                         placeholder="Ex: Vinícius Catelani"
                         maxlength="50"
                         autocomplete="off"
+                        required
                     >
                 </div>
 
                 <div class="login-input-group">
-                    <label for="user-password">Senha</label>
+                    <label for="user-password">
+                        <i class="fa-solid fa-lock"></i> Senha
+                    </label>
                     <input 
                         type="password" 
                         id="user-password" 
                         class="login-input" 
                         placeholder="Digite a senha"
+                        required
                     >
                 </div>
 
                 <button type="submit" class="login-btn">
-                    <i class="fa-solid fa-arrow-right"></i>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
                     Entrar
                 </button>
 
-                <p class="login-error" id="login-error" style="display:none;">
+                <div class="login-error" id="login-error" style="display:none;">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    Erro
-                </p>
-
+                    <span>Erro no login</span>
+                </div>
             </form>
 
             <div class="login-footer">
@@ -60,80 +64,119 @@
                     <div class="theme-preview-dot active" style="background: #1e293b;" onclick="setThemePreview('default')" title="Padrão"></div>
                     <div class="theme-preview-dot" style="background: #ffffff;" onclick="setThemePreview('white')" title="Claro"></div>
                     <div class="theme-preview-dot" style="background: #000000;" onclick="setThemePreview('dark')" title="Noturno"></div>
-                    <div class="theme-preview-dot" style="background: #0a3d28;" onclick="setThemePreview('ucp')" title="UCP"></div>
+                    <div class="theme-preview-dot" style="background: #0a3d28; border: 2px solid #facc15;" onclick="setThemePreview('ucp')" title="UCP"></div>
                 </div>
+                
+                <p style="margin-top: 20px; font-size: 0.8rem;">
+                    <i class="fa-regular fa-hospital"></i> UCP - Faculdade de Medicina
+                </p>
             </div>
-
         </div>
     </div>
 
-<script>
-    // ===============================
-    // CONFIGURAÇÃO
-    // ===============================
+    <script>
+        // ===============================
+        // CONFIGURAÇÃO
+        // ===============================
 
-    const USER_KEY = 'medicina_py_user';
-    const THEME_KEY = 'medicina_py_theme';
-    const ACCESS_PASSWORD = "med2026"; // MUDE AQUI SUA SENHA
+        const USER_KEY = 'medicina_py_user';
+        const THEME_KEY = 'medicina_py_theme';
+        const ACCESS_PASSWORD = "med2026"; // SENHA CORRETA
 
-    // Se já estiver logado → vai direto
-    if (localStorage.getItem(USER_KEY)) {
-        window.location.href = 'dashboard.html';
-    }
-
-    function handleLogin(event) {
-        event.preventDefault();
-
-        const nameInput = document.getElementById('user-name');
-        const passwordInput = document.getElementById('user-password');
-        const errorMsg = document.getElementById('login-error');
-
-        const userName = nameInput.value.trim();
-        const password = passwordInput.value;
-
-        // Validar nome
-        if (!userName) {
-            errorMsg.innerText = "Digite seu nome.";
-            errorMsg.style.display = "block";
-            nameInput.focus();
-            return;
+        // Se já estiver logado → vai direto
+        if (localStorage.getItem(USER_KEY)) {
+            window.location.href = 'dashboard.html';
         }
 
-        // Validar senha
-        if (password !== ACCESS_PASSWORD) {
-            errorMsg.innerText = "Senha incorreta.";
-            errorMsg.style.display = "block";
-            passwordInput.focus();
-            return;
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const nameInput = document.getElementById('user-name');
+            const passwordInput = document.getElementById('user-password');
+            const errorMsg = document.getElementById('login-error');
+
+            const userName = nameInput.value.trim();
+            const password = passwordInput.value;
+
+            // Validar nome
+            if (!userName) {
+                errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Digite seu nome.';
+                errorMsg.style.display = "block";
+                nameInput.focus();
+                return;
+            }
+
+            // Validar senha
+            if (password !== ACCESS_PASSWORD) {
+                errorMsg.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Senha incorreta.';
+                errorMsg.style.display = "block";
+                passwordInput.focus();
+                return;
+            }
+
+            // Se estiver tudo certo - mostrar loading
+            errorMsg.style.display = "none";
+            
+            const btn = document.querySelector('.login-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+            btn.disabled = true;
+            
+            // Salvar usuário e redirecionar
+            localStorage.setItem(USER_KEY, userName);
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
         }
 
-        // Se estiver tudo certo
-        errorMsg.style.display = "none";
-        localStorage.setItem(USER_KEY, userName);
-        window.location.href = 'dashboard.html';
-    }
-
-    function setThemePreview(themeName) {
-        document.body.classList.remove('theme-default', 'theme-white', 'theme-dark', 'theme-ucp');
-        if (themeName !== 'default') {
-            document.body.classList.add('theme-' + themeName);
+        function setThemePreview(themeName) {
+            document.body.classList.remove('theme-default', 'theme-white', 'theme-dark', 'theme-ucp');
+            if (themeName !== 'default') {
+                document.body.classList.add('theme-' + themeName);
+            }
+            localStorage.setItem(THEME_KEY, themeName);
+            
+            // Atualizar indicador ativo
+            document.querySelectorAll('.theme-preview-dot').forEach(dot => {
+                dot.classList.remove('active');
+            });
+            
+            // Encontrar e marcar o dot correto
+            const dots = document.querySelectorAll('.theme-preview-dot');
+            if (themeName === 'default') dots[0].classList.add('active');
+            else if (themeName === 'white') dots[1].classList.add('active');
+            else if (themeName === 'dark') dots[2].classList.add('active');
+            else if (themeName === 'ucp') dots[3].classList.add('active');
         }
-        localStorage.setItem(THEME_KEY, themeName);
-    }
 
-    document.getElementById('user-name').addEventListener('input', () => {
-        document.getElementById('login-error').style.display = "none";
-    });
+        // Event listeners para esconder erro ao digitar
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('user-name');
+            const passwordInput = document.getElementById('user-password');
+            
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.addEventListener('input', () => {
+                    document.getElementById('login-error').style.display = "none";
+                });
+            }
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('input', () => {
+                    document.getElementById('login-error').style.display = "none";
+                });
+            }
+            
+            // Carregar tema salvo
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'default';
+            setThemePreview(savedTheme);
+        });
 
-    document.getElementById('user-password').addEventListener('input', () => {
-        document.getElementById('login-error').style.display = "none";
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('user-name').focus();
-    });
-
-</script>
-
+        // Prevenir que o formulário seja enviado de outras formas
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    </script>
 </body>
 </html>
