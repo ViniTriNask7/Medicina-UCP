@@ -1,153 +1,11 @@
 // ==========================================================
-// FUNÇÃO DE LOGOUT SIMPLES E DIRETA
-// ==========================================================
-
-// Sobrescrever a função logout existente
-window.logout = function() {
-    console.log('Logout clicado'); // Para debug
-    
-    // 🔥 SINCRONIZAÇÃO AUTOMÁTICA POR USUÁRIO
-const originalGet = localStorage.getItem.bind(localStorage);
-const originalSet = localStorage.setItem.bind(localStorage);
-
-const syncStorage = {
-    getItem(key) {
-        const user = originalGet(USER_KEY);
-        return user ? originalGet(SYNC_PREFIX + user + '_' + key) : null;
-    },
-    setItem(key, value) {
-        const user = originalGet(USER_KEY);
-        if (user) originalSet(SYNC_PREFIX + user + '_' + key, value);
-        else originalSet(key, value);
-    }
-};
-
-localStorage.getItem = syncStorage.getItem.bind(syncStorage);
-localStorage.setItem = syncStorage.setItem.bind(syncStorage);
-    // Confirmar logout
-    if (confirm('Tem certeza que deseja sair?')) {
-        // Parar timers se existirem
-        if (typeof stopAllTimers === 'function') {
-            stopAllTimers();
-        }
-        
-        // Remover usuário do localStorage
-        localStorage.removeItem('medicina_py_user');
-        
-        // Redirecionar para index.html
-        window.location.href = 'index.html';
-    }
-};
-
-// Também garantir que a função está disponível globalmente
-function logout() {
-    window.logout();
-}
-
-// ==========================================================
-// MEDICINA PY - SCRIPT PRINCIPAL (VERSÃO CORRIGIDA)
+// MEDICINA PY - SCRIPT PRINCIPAL (VERSÃO FINAL CORRIGIDA)
 // ==========================================================
 
 // ===== CONFIGURAÇÕES GLOBAIS =====
 const APP_VERSION = '2.0.0';
 const USER_KEY = 'medicina_py_user';
-const SYNC_PREFIX = 'sync_' + btoa(location.hostname) + '_'; // ← ADICIONE
-
 const THEME_KEY = 'medicina_py_theme';
-const ACCESS_PASSWORD = "med2026"; // Senha padrão
-
-// ===== SISTEMA DE AUTENTICAÇÃO CORRIGIDO =====
-const Auth = {
-    isLoggedIn() {
-        return localStorage.getItem(USER_KEY) !== null;
-    },
-    
-    getUserName() {
-        return localStorage.getItem(USER_KEY) || 'Usuário';
-    },
-    
-    getUserInitials() {
-        const name = this.getUserName();
-        const parts = name.trim().split(' ');
-        if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
-        return name.substring(0,2).toUpperCase();
-    },
-    
-    logout() {
-        // Parar todos os timers
-        stopAllTimers();
-        
-        // Limpar dados da sessão atual
-        sessionSeconds = 0;
-        if (typeof updateMainTimerDisplay === 'function') {
-            updateMainTimerDisplay();
-        }
-        
-        // IMPORTANTE: Manter o tema, remover apenas o usuário
-        localStorage.removeItem(USER_KEY);
-        
-        // Redirecionar para a página de login
-        window.location.href = 'index.html';
-    },
-    
-    updateUserInterface() {
-        const userName = this.getUserName();
-        const welcomeEl = document.getElementById('welcome-message');
-        if(welcomeEl) welcomeEl.innerHTML = 'Olá, ' + userName.split(' ')[0] + '! 👋';
-        
-        const profileName = document.getElementById('user-name-display');
-        if(profileName) profileName.textContent = userName;
-        
-        const avatar = document.getElementById('user-avatar');
-        if(avatar) avatar.textContent = this.getUserInitials();
-    },
-    
-    protectPage() {
-        // Se não estiver logado e não estiver na página de login, redirecionar
-        if(!this.isLoggedIn() && !window.location.pathname.includes('index.html')) { 
-            window.location.href = 'index.html'; 
-            return false; 
-        }
-        return true;
-    }
-};
-
-// ===== FUNÇÃO DE LOGOUT GLOBAL =====
-function logout() {
-    // Usar o modal de confirmação melhorado
-    showConfirmation('Deseja realmente sair do sistema?', () => {
-        // Mostrar toast de saída
-        showToast('Saindo...', 'info', 1000);
-        
-        // Executar logout após pequeno delay
-        setTimeout(() => {
-            Auth.logout();
-        }, 500);
-    });
-}
-
-// ===== VERIFICAÇÃO DE LOGIN NA INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', () => {
-    // Verificar se está na página de login
-    if (window.location.pathname.includes('index.html')) {
-        // Se já estiver logado, redirecionar para dashboard
-        if (Auth.isLoggedIn()) {
-            window.location.href = 'dashboard.html';
-        }
-        return;
-    }
-    
-    // Se estiver no dashboard, proteger a página
-    if (window.location.pathname.includes('dashboard.html')) {
-        if (!Auth.protectPage()) return;
-        // Inicializar o app
-        setTimeout(() => {
-            if (typeof init === 'function') {
-                init();
-            }
-        }, 100);
-    }
-});
 
 // ===== BANCO DE DADOS (CURRÍCULO em ESPANHOL) =====
 const CURRICULO = {
@@ -165,7 +23,7 @@ const CURRICULO = {
     12: ["Gineco-Obstetricia", "Atención Primaria", "Emergentología"]
 };
 
-// ===== IMAGENS DOS SEMESTRES (UNSPLASH) =====
+// ===== IMAGENS DOS SEMESTRES =====
 const IMAGENS_SEMESTRES = {
     1: "https://images.unsplash.com/photo-1530210124550-912dc1381cb8?q=80&w=800",
     2: "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=800",
@@ -189,12 +47,12 @@ let appData = JSON.parse(localStorage.getItem('med_v7')) || {
     currentSub: "" 
 };
 
-let mainTimerInterval = null, 
-    isMainTimerRunning = false, 
-    sessionSeconds = 0, 
-    pomodoroInterval = null, 
-    pomodoroTime = 25 * 60, 
-    isPomodoroRunning = false;
+let mainTimerInterval = null;
+let isMainTimerRunning = false;
+let sessionSeconds = 0;
+let pomodoroInterval = null;
+let pomodoroTime = 25 * 60;
+let isPomodoroRunning = false;
 
 let currentView = 'home';
 let currentSubject = null;
@@ -202,14 +60,23 @@ let currentSemester = '1';
 
 // ===== INDEXED DB (Arquivos) =====
 let db;
-const request = indexedDB.open("MedicinaFilesDB", 1);
+const request = indexedDB.open("MedicinaFilesDB", 2);
+
 request.onupgradeneeded = function(e) { 
     db = e.target.result; 
-    db.createObjectStore("files", { keyPath: "id", autoIncrement: true })
-      .createIndex("subject", "subject", { unique: false }); 
+    if (!db.objectStoreNames.contains("files")) {
+        const store = db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
+        store.createIndex("subject", "subject", { unique: false });
+    }
 };
+
 request.onsuccess = function(e) { 
     db = e.target.result; 
+    console.log('✅ IndexedDB pronto');
+};
+
+request.onerror = function(e) {
+    console.error('❌ Erro no IndexedDB:', e);
 };
 
 // ===== FUNÇÃO PARA PARAR TODOS OS TIMERS =====
@@ -225,7 +92,6 @@ function stopAllTimers() {
     isMainTimerRunning = false;
     isPomodoroRunning = false;
     
-    // Resetar ícones
     const mainIcon = document.querySelector('#main-timer-status-icon i');
     if (mainIcon) mainIcon.className = 'fa-solid fa-play';
     
@@ -243,84 +109,105 @@ function setTheme(themeName) {
     updateThemeIndicators(themeName);
 }
 
-function setThemePreview(themeName) {
-    setTheme(themeName);
-}
-
 function updateThemeIndicators(themeName) {
-    const dots = document.querySelectorAll('.theme-dot, .theme-preview-dot');
+    const dots = document.querySelectorAll('.theme-dot');
     dots.forEach(dot => {
-        dot.classList.remove('active', 'selected');
+        dot.classList.remove('active');
+        dot.style.border = '2px solid var(--border)';
         if (dot.getAttribute('onclick')?.includes(themeName)) {
+            dot.style.border = '2px solid var(--primary)';
             dot.classList.add('active');
         }
     });
 }
 
-// ===== INICIALIZAÇÃO =====
+// ===== INICIALIZAÇÃO PRINCIPAL =====
 function init() {
-    if(!Auth.protectPage()) return;
-    
-    // Resetar contagem diária se necessário
-    if(appData.lastDate !== new Date().toLocaleDateString()){
+    const hoje = new Date().toLocaleDateString();
+    if(appData.lastDate !== hoje){
         appData.time = 0;
-        appData.lastDate = new Date().toLocaleDateString();
+        appData.lastDate = hoje;
         save();
     }
     
-    // Carregar tema salvo
     const savedTheme = localStorage.getItem(THEME_KEY) || 'default';
     setTheme(savedTheme);
     
-    // Atualizar interface do usuário
-    Auth.updateUserInterface();
-    
-    // Renderizar componentes
+    updateUserInterface();
     renderHomeStats();
     renderSemestres();
     MedCalendar.init();
     
-    // Inicializar funcionalidades
-    autoSaveNotes();
+    if (document.getElementById('note-editor')) {
+        autoSaveNotes();
+    }
+    
     updatePomoDisplay();
-    initDropZone();
-    
-    // Mostrar view inicial
     switchView('home');
-    
-    // Adicionar listeners
-    addEventListeners();
+    restoreTimer();
     
     console.log(`✅ Medicina PY v${APP_VERSION} inicializado`);
 }
 
-// ===== Navegação =====
+function updateUserInterface() {
+    const userName = localStorage.getItem(USER_KEY) || 'Usuário';
+    const welcomeEl = document.getElementById('welcome-message');
+    if(welcomeEl) welcomeEl.innerHTML = 'Olá, ' + userName.split(' ')[0] + '! 👋';
+    
+    const profileName = document.getElementById('user-name-display');
+    if(profileName) profileName.textContent = userName;
+    
+    const avatar = document.getElementById('user-avatar');
+    if(avatar) {
+        const parts = userName.trim().split(' ');
+        if (parts.length >= 2) {
+            avatar.textContent = (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+        } else {
+            avatar.textContent = userName.substring(0,2).toUpperCase();
+        }
+    }
+}
+
+function restoreTimer() {
+    const savedTimer = JSON.parse(localStorage.getItem('medicina_timer'));
+    if (savedTimer && savedTimer.running) {
+        sessionSeconds = savedTimer.seconds || 0;
+        updateMainTimerDisplay();
+    }
+}
+
+// ===== NAVEGAÇÃO =====
 function switchView(viewName) {
-    // Fechar sidebar mobile
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
     sidebar?.classList.remove('active');
     overlay?.classList.remove('active');
     
-    // Esconder todas as views
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     
-    // Mostrar view selecionada
     const targetView = document.getElementById('view-' + viewName);
     if(targetView) targetView.classList.add('active');
     
-    // Atualizar botão ativo
-    const btnMap = { home: 'btn-home', semestres: 'btn-semestres', focus: 'btn-semestres', calendario: 'btn-calendario' };
+    const btnMap = { 
+        home: 'btn-home', 
+        semestres: 'btn-semestres', 
+        calendario: 'btn-calendario',
+        focus: 'btn-semestres' 
+    };
+    
     const btnId = btnMap[viewName]; 
     if(btnId) document.getElementById(btnId)?.classList.add('active');
     
     currentView = viewName;
     
-    // Atualizar conteúdo específico
     if (viewName === 'calendario') {
         MedCalendar.renderizarAgenda();
         MedCalendar.popularSelectMaterias();
+    } else if (viewName === 'focus' && currentSubject) {
+        renderVideosList();
+        renderTasks();
+        renderFilesList();
     }
 }
 
@@ -331,6 +218,10 @@ function toggleMainTimer() {
         clearInterval(mainTimerInterval);
         icon.className = 'fa-solid fa-play';
         isMainTimerRunning = false;
+        localStorage.setItem('medicina_timer', JSON.stringify({
+            running: false,
+            seconds: sessionSeconds
+        }));
     } else{
         icon.className = 'fa-solid fa-pause';
         isMainTimerRunning = true;
@@ -340,44 +231,56 @@ function toggleMainTimer() {
             updateMainTimerDisplay();
             if(sessionSeconds % 10 === 0) save();
         }, 1000);
+        
+        localStorage.setItem('medicina_timer', JSON.stringify({
+            running: true,
+            seconds: sessionSeconds
+        }));
     }
 }
 
 function updateMainTimerDisplay() {
-    const h = Math.floor(sessionSeconds / 3600), 
-          m = Math.floor((sessionSeconds % 3600) / 60), 
-          s = sessionSeconds % 60;
+    const h = Math.floor(sessionSeconds / 3600);
+    const m = Math.floor((sessionSeconds % 3600) / 60);
+    const s = sessionSeconds % 60;
+    
     const display = document.getElementById('display-main-timer');
-    if(display) display.innerText = h.toString().padStart(2,'0') + ':' + 
-                                     m.toString().padStart(2,'0') + ':' + 
-                                     s.toString().padStart(2,'0');
+    if(display) {
+        display.innerText = h.toString().padStart(2,'0') + ':' + 
+                           m.toString().padStart(2,'0') + ':' + 
+                           s.toString().padStart(2,'0');
+    }
 }
 
 function stopAndGoHome() {
-    clearInterval(mainTimerInterval); 
-    isMainTimerRunning = false; 
-    
-    // Salvar sessão se tiver mais de 1 minuto
-    if (sessionSeconds > 60) {
-        saveStudySession();
+    if(confirm('Finalizar sessão de estudo?')) {
+        clearInterval(mainTimerInterval); 
+        isMainTimerRunning = false; 
+        
+        if (sessionSeconds > 60) {
+            saveStudySession();
+        }
+        
+        sessionSeconds = 0;
+        const icon = document.querySelector('#main-timer-status-icon i');
+        if(icon) icon.className = 'fa-solid fa-play';
+        updateMainTimerDisplay();
+        save(); 
+        renderHomeStats(); 
+        switchView('home');
+        localStorage.removeItem('medicina_timer');
+        showToast('Sessão de estudo finalizada!', 'success');
     }
-    
-    sessionSeconds = 0;
-    const icon = document.querySelector('#main-timer-status-icon i');
-    if(icon) icon.className = 'fa-solid fa-play';
-    updateMainTimerDisplay();
-    save(); 
-    renderHomeStats(); 
-    switchView('home');
-    showToast('Sessão de estudo finalizada!', 'success');
 }
 
 function renderHomeStats() {
-    const h = Math.floor(appData.time / 3600), 
-          m = Math.floor((appData.time % 3600) / 60);
-    const statTime = document.getElementById('stat-time'), 
-          statSem = document.getElementById('stat-sem'), 
-          statSub = document.getElementById('stat-last-sub');
+    const h = Math.floor(appData.time / 3600);
+    const m = Math.floor((appData.time % 3600) / 60);
+    
+    const statTime = document.getElementById('stat-time');
+    const statSem = document.getElementById('stat-sem');
+    const statSub = document.getElementById('stat-last-sub');
+    
     if(statTime) statTime.innerText = h + 'h ' + m + 'm';
     if(statSem) statSem.innerText = appData.currentSem + 'º';
     if(statSub) statSub.innerText = appData.currentSub || 'Nenhuma';
@@ -389,8 +292,10 @@ function togglePomodoro() {
     if(isPomodoroRunning){
         clearInterval(pomodoroInterval); 
         icon.className = 'fa-solid fa-play';
+        isPomodoroRunning = false;
     } else{
         icon.className = 'fa-solid fa-pause';
+        isPomodoroRunning = true;
         pomodoroInterval = setInterval(() => {
             if(pomodoroTime > 0){ 
                 pomodoroTime--; 
@@ -407,12 +312,11 @@ function togglePomodoro() {
             }
         }, 1000);
     }
-    isPomodoroRunning = !isPomodoroRunning;
 }
 
 function updatePomoDisplay() {
-    const m = Math.floor(pomodoroTime / 60), 
-          s = pomodoroTime % 60;
+    const m = Math.floor(pomodoroTime / 60);
+    const s = pomodoroTime % 60;
     const pDisplay = document.getElementById('pomo-timer'); 
     if(pDisplay) pDisplay.innerText = m + ':' + s.toString().padStart(2,'0');
 }
@@ -431,7 +335,7 @@ function saveStudySession() {
         id: Date.now(),
         date: new Date().toISOString(),
         duration: sessionSeconds,
-        subject: currentSubject || 'Geral',
+        subject: currentSubject || appData.currentSub || 'Geral',
         semester: currentSemester
     };
     
@@ -458,17 +362,24 @@ function renderSemestres() {
 
 function openSemester(semNum) {
     appData.currentSem = semNum; 
+    currentSemester = semNum.toString();
     save();
     switchView('focus');
     
-    document.getElementById('focus-sem-title').innerText = semNum + 'º Semestre';
+    const titleEl = document.getElementById('focus-sem-title');
+    if(titleEl) titleEl.innerText = semNum + 'º Semestre';
     
     const listContainer = document.getElementById('focus-subjects-list');
+    if(!listContainer) return;
+    
     listContainer.innerHTML = '';
     
     CURRICULO[semNum].forEach(materia => {
         const item = document.createElement('div');
-        item.className = 'subject-item ' + (appData.currentSub === materia ? 'active' : '');
+        item.className = 'subject-item';
+        if (appData.currentSub === materia) {
+            item.classList.add('active');
+        }
         item.innerHTML = '<i class="fa-solid fa-book-medical"></i> ' + materia;
         item.onclick = () => selectSubject(materia);
         listContainer.appendChild(item);
@@ -476,7 +387,7 @@ function openSemester(semNum) {
     
     if(appData.currentSub && CURRICULO[semNum].includes(appData.currentSub)) {
         selectSubject(appData.currentSub);
-    } else {
+    } else if (CURRICULO[semNum].length > 0) {
         selectSubject(CURRICULO[semNum][0]);
     }
 }
@@ -487,23 +398,40 @@ function selectSubject(materia) {
     save(); 
     renderHomeStats();
     
-    document.getElementById('focus-active-subject').innerText = materia;
+    const activeSubjectEl = document.getElementById('focus-active-subject');
+    if(activeSubjectEl) activeSubjectEl.innerText = materia;
     
-    document.querySelectorAll('.subject-item').forEach(el => 
-        el.classList.toggle('active', el.innerText.includes(materia))
-    );
+    document.querySelectorAll('.subject-item').forEach(el => {
+        if (el.innerText.includes(materia)) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
     
-    // Carregar dados da matéria
-    document.getElementById('note-editor').value = localStorage.getItem('notes_' + materia) || "";
+    const noteEditor = document.getElementById('note-editor');
+    if(noteEditor) {
+        noteEditor.value = localStorage.getItem('notes_' + materia) || "";
+    }
     
     renderVideosList();
     renderTasks();
     renderFilesList();
 }
 
+function resumeStudy() { 
+    if(appData.currentSub) {
+        openSemester(appData.currentSem);
+    } else {
+        switchView('semestres');
+    }
+}
+
 // ===== VÍDEOS =====
 function addYouTubeVideo() {
     const input = document.getElementById('youtube-url');
+    if (!input) return;
+    
     const url = input.value.trim();
     
     if (!url || !appData.currentSub) {
@@ -537,14 +465,14 @@ function extractVideoId(url) {
 }
 
 function removeVideo(id) {
-    showConfirmation('Remover este vídeo?', () => {
+    if(confirm('Remover este vídeo?')) {
         const key = 'videos_' + appData.currentSub;
         let videos = JSON.parse(localStorage.getItem(key)) || [];
         videos = videos.filter(v => v !== id);
         localStorage.setItem(key, JSON.stringify(videos));
         renderVideosList();
         showToast('Vídeo removido', 'info');
-    });
+    }
 }
 
 function renderVideosList() {
@@ -552,6 +480,12 @@ function renderVideosList() {
     const placeholder = document.getElementById('video-placeholder-empty');
     
     if (!grid || !placeholder) return;
+    
+    if (!appData.currentSub) {
+        grid.innerHTML = '';
+        placeholder.style.display = 'block';
+        return;
+    }
     
     const videos = JSON.parse(localStorage.getItem('videos_' + appData.currentSub)) || [];
 
@@ -611,7 +545,6 @@ function autoSaveNotes() {
     area.addEventListener('input', () => { 
         if(appData.currentSub) {
             localStorage.setItem('notes_' + appData.currentSub, area.value);
-            // Debounce para não mostrar toast a cada caractere
             clearTimeout(window.noteSaveTimeout);
             window.noteSaveTimeout = setTimeout(() => {
                 showToast('Anotações salvas!', 'success', 1500);
@@ -623,6 +556,8 @@ function autoSaveNotes() {
 // ===== TAREFAS =====
 function addTask() {
     const input = document.getElementById('task-input'); 
+    if (!input) return;
+    
     const taskText = input.value.trim();
     
     if(!taskText || !appData.currentSub) {
@@ -642,6 +577,11 @@ function addTask() {
 function renderTasks() {
     const list = document.getElementById('tasks-list'); 
     if(!list) return;
+    
+    if (!appData.currentSub) {
+        list.innerHTML = '<p class="text-muted text-center" style="padding: 20px;">Selecione uma matéria</p>';
+        return;
+    }
     
     list.innerHTML = '';
     const tasks = JSON.parse(localStorage.getItem('tasks_' + appData.currentSub)) || [];
@@ -671,21 +611,21 @@ function toggleTask(index) {
 }
 
 function deleteTask(index) {
-    showConfirmation('Remover esta tarefa?', () => {
+    if(confirm('Remover esta tarefa?')) {
         const key = 'tasks_' + appData.currentSub;
         const tasks = JSON.parse(localStorage.getItem(key));
         tasks.splice(index, 1);
         localStorage.setItem(key, JSON.stringify(tasks));
         renderTasks();
         showToast('Tarefa removida', 'info');
-    });
+    }
 }
 
-// ===== ARQUIVOS (INDEXED DB) =====
+// ===== ARQUIVOS =====
 function initDropZone() {
     const zone = document.getElementById('drop-zone'); 
     const input = document.getElementById('file-input');
-    if(!zone || !input || !db) return;
+    if(!zone || !input) return;
     
     zone.onclick = () => input.click();
     
@@ -711,8 +651,12 @@ function handleFiles(files) {
         return;
     }
     
+    if (!db) {
+        showToast("Banco de dados não inicializado", 'error');
+        return;
+    }
+    
     Array.from(files).forEach(file => {
-        // Verificar tamanho (max 1GB)
         if (file.size > 1024 * 1024 * 1024) {
             showToast('Arquivo muito grande (máx 1GB)', 'error');
             return;
@@ -748,6 +692,11 @@ function renderFilesList() {
     
     list.innerHTML = '';
     
+    if (!appData.currentSub) {
+        list.innerHTML = '<p class="text-muted text-center" style="padding: 20px;">Selecione uma matéria</p>';
+        return;
+    }
+    
     const transaction = db.transaction(["files"], "readonly");
     const index = transaction.objectStore("files").index("subject");
     const request = index.openCursor(IDBKeyRange.only(appData.currentSub));
@@ -762,7 +711,6 @@ function renderFilesList() {
             const item = document.createElement('div');
             item.className = 'file-item';
             
-            // Ícone baseado no tipo
             let icon = 'fa-file';
             if (file.type.includes('pdf')) icon = 'fa-file-pdf';
             else if (file.type.includes('image')) icon = 'fa-file-image';
@@ -807,7 +755,7 @@ function downloadFile(id) {
 }
 
 function deleteFile(id) {
-    showConfirmation("Excluir este arquivo?", () => {
+    if(confirm("Excluir este arquivo?")) {
         const transaction = db.transaction(["files"], "readwrite");
         const request = transaction.objectStore("files").delete(id);
         
@@ -815,10 +763,10 @@ function deleteFile(id) {
             renderFilesList();
             showToast('Arquivo removido', 'info');
         };
-    });
+    }
 }
 
-// ===== CALENDÁRIO =====
+// ===== CALENDÁRIO CORRIGIDO =====
 const MedCalendar = {
     storageKey: 'med_agenda_v1',
     
@@ -826,8 +774,37 @@ const MedCalendar = {
         this.popularSelectMaterias(); 
         this.renderizarAgenda(); 
         this.atualizarHome();
+        
         const inputData = document.getElementById('cal-data'); 
-        if(inputData) inputData.value = new Date().toISOString().split('T')[0];
+        if(inputData) {
+            inputData.value = new Date().toISOString().split('T')[0];
+        }
+        
+        const inputHoras = document.getElementById('cal-horas');
+        if(inputHoras) {
+            inputHoras.value = '1';
+        }
+    },
+    
+    mostrarFormulario() {
+        const formBox = document.getElementById('form-agenda-box');
+        if (formBox) {
+            formBox.style.display = 'block';
+            this.popularSelectMaterias();
+            const inputData = document.getElementById('cal-data');
+            if(inputData) inputData.value = new Date().toISOString().split('T')[0];
+            const inputHoras = document.getElementById('cal-horas');
+            if(inputHoras) inputHoras.value = '1';
+            
+            setTimeout(() => {
+                formBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    },
+    
+    esconderFormulario() {
+        const formBox = document.getElementById('form-agenda-box');
+        if (formBox) formBox.style.display = 'none';
     },
     
     getEventos() { 
@@ -839,52 +816,88 @@ const MedCalendar = {
         if(!select) return;
         
         let todasMaterias = [];
-        Object.values(CURRICULO).forEach(lista => todasMaterias = todasMaterias.concat(lista));
-        const materiasUnicas = [...new Set(todasMaterias)].sort();
-        select.innerHTML = materiasUnicas.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+        Object.values(CURRICULO).forEach(lista => {
+            todasMaterias = todasMaterias.concat(lista);
+        });
+        
+        const materiasUnicas = [...new Set(todasMaterias)].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        
+        select.innerHTML = '<option value="">📋 Selecione uma matéria</option>' + 
+            materiasUnicas.map(m => '<option value="' + m + '">' + m + '</option>').join('');
     },
     
     adicionarEvento() {
-        const materia = document.getElementById('cal-materia').value;
-        const data = document.getElementById('cal-data').value;
-        const horas = document.getElementById('cal-horas').value;
-        const tipo = document.getElementById('cal-tipo').value;
+        const select = document.getElementById('cal-materia');
+        const materia = select ? select.value : '';
+        const data = document.getElementById('cal-data')?.value;
+        const horas = document.getElementById('cal-horas')?.value;
+        const tipo = document.getElementById('cal-tipo')?.value;
         
-        if(!data || !horas) { 
-            showToast("Preencha a data e a duração!", 'warning'); 
+        if(!materia || materia === "") { 
+            showToast("Selecione uma matéria!", 'warning'); 
             return; 
         }
         
-        const novoEvento = { id: Date.now(), materia, data, horas, tipo };
+        if(!data) { 
+            showToast("Selecione uma data!", 'warning'); 
+            return; 
+        }
+        
+        if(!horas || parseFloat(horas) <= 0) { 
+            showToast("Digite uma duração válida (em horas)!", 'warning'); 
+            return; 
+        }
+        
+        const novoEvento = { 
+            id: Date.now(), 
+            materia, 
+            data, 
+            horas: parseFloat(horas), 
+            tipo: tipo || 'Teórica'
+        };
+        
         const eventos = this.getEventos(); 
         eventos.push(novoEvento);
-        eventos.sort((a, b) => new Date(a.data) - new Date(b.data));
+        
+        eventos.sort((a, b) => {
+            if (a.data < b.data) return -1;
+            if (a.data > b.data) return 1;
+            return 0;
+        });
+        
         localStorage.setItem(this.storageKey, JSON.stringify(eventos));
         
-        document.getElementById('form-agenda-box').style.display = 'none';
+        this.esconderFormulario();
         this.renderizarAgenda(); 
         this.atualizarHome();
+        
         showToast('Evento adicionado à agenda!', 'success');
     },
     
     removerEvento(id) {
-        showConfirmation('Remover este compromisso?', () => {
+        if(confirm('Remover este compromisso?')) {
             const eventos = this.getEventos().filter(e => e.id !== id);
             localStorage.setItem(this.storageKey, JSON.stringify(eventos));
             this.renderizarAgenda(); 
             this.atualizarHome();
             showToast('Compromisso removido', 'info');
-        });
+        }
     },
     
     formatarDataBR(dataStr) {
+        if (!dataStr) return '';
         const partes = dataStr.split('-'); 
-        return partes[2] + '/' + partes[1] + '/' + partes[0];
+        if (partes.length === 3) {
+            return partes[2] + '/' + partes[1] + '/' + partes[0];
+        }
+        return dataStr;
     },
     
     atualizarHome() {
-        const hojeStr = new Date().toISOString().split('T')[0];
-        const amanhaObj = new Date(); 
+        const hoje = new Date();
+        const hojeStr = hoje.toISOString().split('T')[0];
+        
+        const amanhaObj = new Date(hoje);
         amanhaObj.setDate(amanhaObj.getDate() + 1); 
         const amanhaStr = amanhaObj.toISOString().split('T')[0];
         
@@ -900,7 +913,7 @@ const MedCalendar = {
                 divHoje.innerHTML = hojeEventos.map(e => 
                     '<div style="margin-bottom:5px;border-left:3px solid var(--primary);padding-left:10px;">' +
                     '<b>' + e.materia + '</b><br>' +
-                    '<small>' + e.tipo + ' • ' + e.horas + 'h</small>' +
+                    '<small>' + (e.tipo || 'Aula') + ' • ' + e.horas + 'h</small>' +
                     '</div>'
                 ).join('');
             } else {
@@ -910,9 +923,10 @@ const MedCalendar = {
         
         if(divAmanha){
             if(amanhaEventos.length > 0) {
-                divAmanha.innerHTML = '<b>Amanhã:</b> ' + amanhaEventos[0].materia + ' (' + amanhaEventos[0].horas + 'h)';
+                divAmanha.innerHTML = '<i class="fa-regular fa-calendar"></i> Amanhã: ' + 
+                    amanhaEventos.map(e => e.materia + ' (' + e.horas + 'h)').join(', ');
             } else {
-                divAmanha.innerHTML = '<b>Amanhã:</b> Nenhum compromisso';
+                divAmanha.innerHTML = '<i class="fa-regular fa-calendar"></i> Amanhã: Nenhum compromisso';
             }
         }
     },
@@ -924,41 +938,55 @@ const MedCalendar = {
         const eventos = this.getEventos(); 
         
         if(eventos.length === 0) { 
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">' +
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);background:var(--bg-card);border-radius:16px;border:1px solid var(--border);">' +
                 '<i class="fa-solid fa-calendar-xmark" style="font-size:3rem;opacity:0.2;margin-bottom:15px;"></i>' +
-                '<p>Sua agenda está vazia. Adicione aulas para começar!</p>' +
+                '<p style="margin-bottom:20px;">Sua agenda está vazia. Adicione aulas para começar!</p>' +
+                '<button class="btn-primary-big" onclick="MedCalendar.mostrarFormulario()">' +
+                '<i class="fa-solid fa-plus"></i> Adicionar Aula</button>' +
                 '</div>'; 
             return; 
         }
         
-        // Agrupar por data
-        const grupos = eventos.reduce((acc, obj) => { 
-            const data = obj.data; 
-            if(!acc[data]) acc[data] = []; 
-            acc[data].push(obj); 
-            return acc; 
-        }, {});
+        const grupos = {};
+        eventos.forEach(evento => {
+            if (!grupos[evento.data]) {
+                grupos[evento.data] = [];
+            }
+            grupos[evento.data].push(evento);
+        });
         
-        container.innerHTML = Object.keys(grupos).map(data => 
-            '<div style="background:var(--bg-card);border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:15px;">' +
-            '<div style="background:var(--bg-main);padding:10px 15px;border-bottom:1px solid var(--border);font-weight:bold;color:var(--primary);display:flex;align-items:center;gap:10px;">' +
+        const datasOrdenadas = Object.keys(grupos).sort((a, b) => {
+            if (a < b) return -1;
+            if (a > b) return 1;
+            return 0;
+        });
+        
+        container.innerHTML = datasOrdenadas.map(data => 
+            '<div style="background:var(--bg-card);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:15px;">' +
+            '<div style="background:var(--bg-main);padding:12px 15px;border-bottom:1px solid var(--border);font-weight:bold;color:var(--primary);display:flex;align-items:center;gap:10px;">' +
             '<i class="fa-regular fa-calendar-check"></i> ' + this.formatarDataBR(data) +
             '</div>' +
             '<div style="padding:10px 15px;">' +
             grupos[data].map(e => 
-                '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">' +
                 '<div>' +
                 '<strong style="color:var(--text-main);">' + e.materia + '</strong>' +
-                '<div style="font-size:0.8rem;color:var(--text-muted);">' + e.tipo + ' • ' + e.horas + ' horas</div>' +
+                '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">' + 
+                    (e.tipo || 'Aula') + ' • ' + e.horas + ' horas' +
                 '</div>' +
-                '<button onclick="MedCalendar.removerEvento(' + e.id + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:5px;">' +
+                '</div>' +
+                '<button onclick="MedCalendar.removerEvento(' + e.id + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:8px;border-radius:8px;" title="Remover">' +
                 '<i class="fa-solid fa-trash-can"></i>' +
                 '</button>' +
                 '</div>'
             ).join('') +
             '</div>' +
             '</div>'
-        ).join('');
+        ).join('') + 
+        '<div style="text-align:center;margin-top:20px;">' +
+        '<button class="btn-primary-big" onclick="MedCalendar.mostrarFormulario()">' +
+        '<i class="fa-solid fa-plus"></i> Adicionar Novo Evento</button>' +
+        '</div>';
     }
 };
 
@@ -970,7 +998,6 @@ function switchTab(tabName) {
     const tab = document.getElementById('tab-' + tabName); 
     if(tab) tab.classList.add('active');
     
-    // Encontrar e ativar o botão correto
     const buttons = document.querySelectorAll('.tab-btn');
     for(let btn of buttons) {
         if(btn.textContent.toLowerCase().includes(tabName)) {
@@ -979,10 +1006,11 @@ function switchTab(tabName) {
         }
     }
     
-    // Inicializar funcionalidades específicas
     if (tabName === 'files') {
-        initDropZone();
-        renderFilesList();
+        setTimeout(() => {
+            initDropZone();
+            renderFilesList();
+        }, 100);
     } else if (tabName === 'video') {
         renderVideosList();
     } else if (tabName === 'tasks') {
@@ -992,7 +1020,7 @@ function switchTab(tabName) {
 
 // ===== UTILITÁRIOS =====
 function save() { 
-    localStorage.setItem('med_v7', JSON.stringify(appData)); // Já sincroniza!
+    localStorage.setItem('med_v7', JSON.stringify(appData));
 }
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -1020,36 +1048,6 @@ function showToast(message, type = 'info', duration = 3000) {
     }, duration);
 }
 
-function showConfirmation(message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay active';
-    
-    const confirmHandler = () => {
-        overlay.remove();
-        onConfirm();
-    };
-    
-    overlay.innerHTML = `
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Confirmar</h3>
-                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>${message}</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary-big" onclick="(${confirmHandler})()">Confirmar</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-}
-
 function playNotification() {
     try {
         const audio = new Audio('data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8');
@@ -1060,73 +1058,13 @@ function playNotification() {
     }
 }
 
-function addEventListeners() {
-    // Tecla Enter para adicionar tarefa
-    const taskInput = document.getElementById('task-input');
-    if (taskInput) {
-        taskInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTask();
-        });
-    }
-    
-    // Tecla Enter para adicionar vídeo
-    const videoInput = document.getElementById('youtube-url');
-    if (videoInput) {
-        videoInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addYouTubeVideo();
-        });
-    }
-    
-    // Salvar timer ao sair da página
-    window.addEventListener('beforeunload', () => {
-        if (isMainTimerRunning) {
-            localStorage.setItem('medicina_timer', JSON.stringify({
-                running: true,
-                seconds: sessionSeconds
-            }));
-        } else {
-            localStorage.removeItem('medicina_timer');
-        }
-    });
-    
-    // Atalhos de teclado
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'h') {
-            e.preventDefault();
-            switchView('home');
-        }
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            switchView('semestres');
-        }
-        if (e.ctrlKey && e.key === 'c') {
-            e.preventDefault();
-            switchView('calendario');
-        }
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.remove();
-            });
-        }
-    });
-}
-
-function resumeStudy() { 
-    if(appData.currentSub) {
-        openSemester(appData.currentSem);
-    } else {
-        switchView('semestres');
-    }
-}
-
+// ===== EXPORTAÇÃO E LIMPEZA =====
 function exportData() {
     const data = {
         version: APP_VERSION,
         exportDate: new Date().toISOString(),
-        user: Auth.getUserName(),
+        user: localStorage.getItem(USER_KEY) || 'Usuário',
         appData: appData,
-        notes: getAllNotes(),
-        tasks: getAllTasks(),
         calendar: MedCalendar.getEventos(),
         sessions: JSON.parse(localStorage.getItem('medicina_sessions')) || []
     };
@@ -1142,48 +1080,6 @@ function exportData() {
     showToast('Dados exportados com sucesso!', 'success');
 }
 
-function getAllNotes() {
-    const notes = {};
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('notes_')) {
-            notes[key.replace('notes_', '')] = localStorage.getItem(key);
-        }
-    }
-    return notes;
-}
-
-function getAllTasks() {
-    const allTasks = {};
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('tasks_')) {
-            allTasks[key.replace('tasks_', '')] = JSON.parse(localStorage.getItem(key));
-        }
-    }
-    return allTasks;
-}
-
-function clearAllData() {
-    showConfirmation('Tem certeza? Todos os dados serão permanentemente apagados.', () => {
-        // Limpar localStorage
-        localStorage.clear();
-        
-        // Limpar IndexedDB
-        if (db) {
-            const transaction = db.transaction(["files"], "readwrite");
-            const store = transaction.objectStore("files");
-            store.clear();
-        }
-        
-        showToast('Todos os dados foram apagados', 'warning');
-        
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    });
-}
-
 // ===== SIDEBAR MOBILE =====
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
@@ -1195,10 +1091,37 @@ function toggleSidebar() {
     }
 }
 
+// ===== EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(init, 100);
+    
+    const taskInput = document.getElementById('task-input');
+    if (taskInput) {
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+    }
+    
+    const videoInput = document.getElementById('youtube-url');
+    if (videoInput) {
+        videoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addYouTubeVideo();
+        });
+    }
+    
+    window.addEventListener('beforeunload', () => {
+        if (isMainTimerRunning) {
+            localStorage.setItem('medicina_timer', JSON.stringify({
+                running: true,
+                seconds: sessionSeconds
+            }));
+        }
+    });
+});
+
 // ===== EXPOR FUNÇÕES PARA O ESCOPO GLOBAL =====
 window.switchView = switchView;
 window.setTheme = setTheme;
-window.setThemePreview = setThemePreview;
 window.toggleMainTimer = toggleMainTimer;
 window.stopAndGoHome = stopAndGoHome;
 window.togglePomodoro = togglePomodoro;
@@ -1208,20 +1131,19 @@ window.addTask = addTask;
 window.toggleTask = toggleTask;
 window.deleteTask = deleteTask;
 window.addYouTubeVideo = addYouTubeVideo;
-window.adicionarEvento = MedCalendar.adicionarEvento;
-window.MedCalendar = MedCalendar;
+window.removeVideo = removeVideo;
 window.openSemester = openSemester;
 window.selectSubject = selectSubject;
 window.resumeStudy = resumeStudy;
-window.logout = logout;
-window.downloadFile = downloadFile;
-window.deleteFile = deleteFile;
 window.toggleSidebar = toggleSidebar;
 window.exportData = exportData;
-window.clearAllData = clearAllData;
-window.showConfirmation = showConfirmation;
-window.removeVideo = removeVideo;
+window.downloadFile = downloadFile;
+window.deleteFile = deleteFile;
 
-// ===== INICIALIZAÇÃO (já feita no DOMContentLoaded) =====
+// FUNÇÕES CRÍTICAS DO CALENDÁRIO - AGORA FUNCIONAM!
+window.adicionarEvento = function() {
+    MedCalendar.adicionarEvento();
+};
+window.MedCalendar = MedCalendar;
 
 console.log('✅ Medicina PY script carregado com sucesso!');
