@@ -6,6 +6,24 @@
 window.logout = function() {
     console.log('Logout clicado'); // Para debug
     
+    // 🔥 SINCRONIZAÇÃO AUTOMÁTICA POR USUÁRIO
+const originalGet = localStorage.getItem.bind(localStorage);
+const originalSet = localStorage.setItem.bind(localStorage);
+
+const syncStorage = {
+    getItem(key) {
+        const user = originalGet(USER_KEY);
+        return user ? originalGet(SYNC_PREFIX + user + '_' + key) : null;
+    },
+    setItem(key, value) {
+        const user = originalGet(USER_KEY);
+        if (user) originalSet(SYNC_PREFIX + user + '_' + key, value);
+        else originalSet(key, value);
+    }
+};
+
+localStorage.getItem = syncStorage.getItem.bind(syncStorage);
+localStorage.setItem = syncStorage.setItem.bind(syncStorage);
     // Confirmar logout
     if (confirm('Tem certeza que deseja sair?')) {
         // Parar timers se existirem
@@ -33,6 +51,8 @@ function logout() {
 // ===== CONFIGURAÇÕES GLOBAIS =====
 const APP_VERSION = '2.0.0';
 const USER_KEY = 'medicina_py_user';
+const SYNC_PREFIX = 'sync_' + btoa(location.hostname) + '_'; // ← ADICIONE
+
 const THEME_KEY = 'medicina_py_theme';
 const ACCESS_PASSWORD = "med2026"; // Senha padrão
 
@@ -972,7 +992,7 @@ function switchTab(tabName) {
 
 // ===== UTILITÁRIOS =====
 function save() { 
-    localStorage.setItem('med_v7', JSON.stringify(appData)); 
+    localStorage.setItem('med_v7', JSON.stringify(appData)); // Já sincroniza!
 }
 
 function showToast(message, type = 'info', duration = 3000) {
