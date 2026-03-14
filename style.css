@@ -81,7 +81,6 @@ body.theme-ucp {
     padding: 0; 
     box-sizing: border-box; 
     outline: none; 
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; 
 }
 
 body { 
@@ -92,6 +91,7 @@ body {
     overflow: hidden; 
     display: flex; 
     position: relative;
+    transition: background-color 0.3s ease;
 }
 
 /* --- BACKGROUND COM FOTO DA FACULDADE --- */
@@ -99,9 +99,14 @@ body::before {
     content: "";
     position: fixed;
     inset: 0;
+    background: linear-gradient(var(--overlay-color), var(--overlay-color));
+    z-index: -1;
+}
+
+/* Fallback caso a imagem não exista */
+body:not(.no-image)::before {
     background: linear-gradient(var(--overlay-color), var(--overlay-color)),
                 url("images/faculdade.jpg") center/cover fixed;
-    z-index: -1;
 }
 
 /* ================================
@@ -120,9 +125,14 @@ body.login-page::before {
     content: "";
     position: fixed;
     inset: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75));
+    z-index: 0;
+}
+
+/* Fallback imagem UCP */
+body.login-page:not(.no-image)::before {
     background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
                 url("images/ucp.jpg") center/cover fixed;
-    z-index: 0;
 }
 
 .login-container {
@@ -380,6 +390,7 @@ body.login-page::before {
     border-top: 1px solid var(--border); 
 }
 
+/* Tema dots unificado */
 .theme-dot { 
     width: 24px;
     height: 24px;
@@ -393,7 +404,6 @@ body.login-page::before {
     transform: scale(1.3) rotate(15deg); 
 }
 
-.theme-dot.selected,
 .theme-dot.active {
     border-color: var(--primary);
     box-shadow: 0 0 10px var(--primary);
@@ -617,7 +627,6 @@ main {
     height: 280px;
     border-radius: 24px;
     margin: 30px 0;
-    background-image: url("images/ucp.jpg");
     background-size: cover;
     background-position: center top;
     background-repeat: no-repeat;
@@ -625,6 +634,11 @@ main {
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     transition: all 0.5s ease;
+}
+
+/* Fallback imagem UCP */
+.home-hero {
+    background-image: url("images/ucp.jpg");
 }
 
 .home-hero:hover {
@@ -1203,7 +1217,16 @@ main {
 }
 
 /* --- CORREÇÃO DO BUG DO SELECT (AGENDA) --- */
-select, input[type="date"], input[type="number"], input[type="text"], input[type="password"] {
+select, 
+input[type="date"], 
+input[type="number"], 
+input[type="text"], 
+input[type="password"],
+input[type="email"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -1225,7 +1248,9 @@ select {
     padding-right: 45px !important;
 }
 
-select:focus, input:focus {
+select:focus, 
+input:focus, 
+textarea:focus {
     border-color: var(--primary) !important;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
     outline: none !important;
@@ -1259,9 +1284,9 @@ select option {
 }
 
 #calendario-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     margin-top: 25px;
 }
 
